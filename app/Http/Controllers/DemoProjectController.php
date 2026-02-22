@@ -122,7 +122,7 @@ class DemoProjectController extends Controller
             $content = $this->buildContentPayload($company, $prompt);
 
             $this->updateProgress($demo, 45);
-            $this->writeTemplateFiles($baseDir, $content, $company);
+            $this->writeTemplateFiles($baseDir, $content, $company, $prompt);
 
             $this->updateProgress($demo, 80);
             $zipPath = $zipDir . '/' . $token . '.zip';
@@ -320,12 +320,12 @@ TXT;
         return $merged;
     }
 
-    private function writeTemplateFiles(string $baseDir, array $content, Company $company): void
+    private function writeTemplateFiles(string $baseDir, array $content, Company $company, string $prompt): void
     {
         File::makeDirectory($baseDir . '/data', 0755, true, true);
         File::put($baseDir . '/data/content.json', json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-        $files = $this->buildWebsiteFilesFromCloudOpus($company, $content);
+        $files = $this->buildWebsiteFilesFromCloudOpus($company, $content, $prompt);
 
         foreach ($files as $file) {
             $relativePath = $this->normalizeWebsiteFilePath((string) ($file['path'] ?? ''));
@@ -352,11 +352,13 @@ TXT;
         }
     }
 
-    private function buildWebsiteFilesFromCloudOpus(Company $company, array $content): array
+    private function buildWebsiteFilesFromCloudOpus(Company $company, array $content, string $prompt): array
     {
-        $siteName = (string) data_get($content, 'site.name', $company->name);
-        $systemPrompt = 'You are an expert frontend engineer. Return ONLY JSON object with this shape: {"files":[{"path":"index.html","content":"..."}]} . Generate complete deployable static website files. Include at least index.html and assets/css/style.css. Do not include explanations.';
-        $userPrompt = "Create a unique Turkish corporate website for this company.\nCompany: {$company->name}\nSector: {$company->activity_area}\nCity: {$company->city}\nDistrict: {$company->district}\nManual brief: {$company->demo_prompt}\nStructured content JSON:\n" . json_encode($content, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $operatorPrompt = trim((string) $company->demo_prompt);
+        $needsAdminFile = str_contains(mb_strtolower($operatorPrompt), 'admin.html');
+
+        $systemPrompt = 'You are an expert frontend engineer. OPERATOR PROMPT IS MANDATORY and has higher priority than all defaults. Return ONLY valid JSON object with this exact shape: {"files":[{"path":"index.html","content":"..."}]}. No markdown, no comments, no explanations. Generate complete deployable static files. All text must be Turkish unless operator asks otherwise.';
+        $userPrompt = "OPERATOR_PROMPT_START\n{$operatorPrompt}\nOPERATOR_PROMPT_END\n\nUse company context and structured content as source material, but if there is any conflict, follow OPERATOR_PROMPT exactly.\nCompany: {$company->name}\nSector: {$company->activity_area}\nCity: {$company->city}\nDistrict: {$company->district}\nPhone: {$company->phone}\nEmail: {$company->email}\nAddress: {$company->address}\n\nOUTPUT RULES:\n1) Return JSON only.\n2) JSON root key must be files.\n3) Each file item needs path and content.\n4) If operator requested specific files (e.g. index.html/admin.html), include them exactly.\n5) Do not omit required sections from operator prompt.\n\nSTRUCTURED_CONTENT_JSON:\n" . json_encode($content, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         $decoded = $this->requestCloudOpusJson($systemPrompt, $userPrompt, 180);
         $files = data_get($decoded, 'files');
@@ -393,8 +395,64 @@ TXT;
             $normalized = array_merge($this->buildFallbackWebsiteFiles($content), $normalized);
         }
 
+                if ($needsAdminFile) {
+                        $hasAdmin = false;
+                        foreach ($normalized as $file) {
+                                if (strtolower((string) $file['path']) === 'admin.html') {
+                                        $hasAdmin = true;
+                                        break;
+                                }
+                        }
+
+                        if (!$hasAdmin) {
+                                $normalized[] = [
+                                        'path' => 'admin.html',
+                                        'content' => $this->buildFallbackAdminHtml($content),
+                                ];
+                        }
+                }
+
         return $normalized;
     }
+
+        private function buildFallbackAdminHtml(array $content): string
+        {
+                $siteName = htmlspecialchars((string) data_get($content, 'site.name', 'Site Admin'), ENT_QUOTES, 'UTF-8');
+                $defaultConfig = htmlspecialchars(json_encode($content, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8');
+
+                return <<<HTML
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>{$siteName} - Admin</title>
+    <style>body{font-family:Arial,sans-serif;background:#0f172a;color:#fff;margin:0;padding:20px}textarea{width:100%;min-height:320px;border:1px solid #334155;background:#111827;color:#e2e8f0;padding:12px}button{margin-top:12px;padding:10px 16px;border:0;background:#2563eb;color:#fff;cursor:pointer;font-weight:700}</style>
+</head>
+<body>
+    <h1>{$siteName} Yönetim</h1>
+    <p>siteConfig JSON alanını güncelleyip kaydedin.</p>
+    <textarea id="cfg">{$defaultConfig}</textarea>
+    <button id="saveBtn">Kaydet (localStorage)</button>
+    <script>
+        const key = 'siteConfig';
+        const area = document.getElementById('cfg');
+        const saved = localStorage.getItem(key);
+        if (saved) area.value = saved;
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            try {
+                JSON.parse(area.value);
+                localStorage.setItem(key, area.value);
+                alert('Kaydedildi');
+            } catch (e) {
+                alert('Geçersiz JSON');
+            }
+        });
+    </script>
+</body>
+</html>
+HTML;
+        }
 
     private function buildFallbackWebsiteFiles(array $content): array
     {

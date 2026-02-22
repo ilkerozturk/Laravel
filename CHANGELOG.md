@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.6] - 2026-02-22
+### Changed
+- Improved Cloud Opus generation prompt so operator-entered Demo Prompt is treated as mandatory primary requirement.
+- Strengthened output contract to enforce JSON-only `files[{path,content}]` responses.
+- Added fallback `admin.html` generation when prompt explicitly requests `admin.html` but model omits it.
+
 ## [1.0.5] - 2026-02-22
 ### Fixed
 - Aligned edit/remove buttons horizontally in Companies table action column (no wrapping, consistent button sizing).
