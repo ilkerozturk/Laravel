@@ -332,18 +332,18 @@
                                 'activity_area' => $company->activity_area,
                             ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
                         @endphp
-                        <div class="flex items-center justify-center gap-1">
+                        <div class="flex flex-nowrap items-center justify-center gap-1.5 whitespace-nowrap">
                             <button type="button"
-                                    class="edit-company-btn inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 hover:bg-brand-50 hover:text-brand-600"
+                                    class="edit-company-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-brand-50 hover:text-brand-600"
                                     title="Düzenle"
                                     data-id="{{ $company->id }}"
                                     data-company='{{ $editCompanyPayload }}'>
                                 <i data-lucide="pencil" class="h-4 w-4"></i>
                             </button>
-                            <form class="flex items-center" method="post" action="{{ route('companies.destroy', $company) }}" onsubmit="return confirm('Bu firmayı silmek istiyor musun?')">
+                            <form class="m-0 inline-flex items-center" method="post" action="{{ route('companies.destroy', $company) }}" onsubmit="return confirm('Bu firmayı silmek istiyor musun?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600" title="Sil">
+                                <button type="submit" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600" title="Sil">
                                     <i data-lucide="trash-2" class="h-4 w-4"></i>
                                 </button>
                             </form>

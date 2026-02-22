@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.5] - 2026-02-22
+### Fixed
+- Aligned edit/remove buttons horizontally in Companies table action column (no wrapping, consistent button sizing).
+
 ## [1.0.4] - 2026-02-22
 ### Changed
 - In Companies list, reduced "Firma" column max width to 250px and added truncation.
