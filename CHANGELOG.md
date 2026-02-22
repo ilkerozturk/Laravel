@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.3] - 2026-02-22
+### Changed
+- Reduced the width of the "Firma" column in Lead list and added text truncation for company name/location.
+
 ## [1.0.2] - 2026-02-22
 ### Changed
 - Root `.htaccess` updated to redirect `/` to `/index.php` as requested.

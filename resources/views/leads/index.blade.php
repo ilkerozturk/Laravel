@@ -63,7 +63,7 @@
         <table class="w-full text-sm">
             <thead>
                 <tr class="border-b border-gray-100 bg-gray-50/50 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                    <th class="px-4 py-3">Firma</th>
+                    <th class="px-4 py-3 w-[190px] max-w-[190px]">Firma</th>
                     <th class="px-4 py-3">İletişim</th>
                     <th class="px-4 py-3">Durum</th>
                     <th class="px-4 py-3">Takip</th>
@@ -88,9 +88,9 @@
                     $cls = $statusColors[$lead->status] ?? 'bg-gray-100 text-gray-600 ring-gray-200';
                 @endphp
                 <tr class="group">
-                    <td class="px-4 py-3">
-                        <p class="font-medium text-gray-900">{{ $lead->company?->name ?: '-' }}</p>
-                        <span class="mt-0.5 inline-flex items-center gap-1 text-xs text-gray-500">
+                    <td class="px-4 py-3 w-[190px] max-w-[190px] align-top">
+                        <p class="max-w-[170px] truncate font-medium text-gray-900">{{ $lead->company?->name ?: '-' }}</p>
+                        <span class="mt-0.5 inline-flex max-w-[170px] items-center gap-1 truncate text-xs text-gray-500">
                             <i data-lucide="map-pin" class="h-3 w-3"></i>
                             {{ $lead->company?->city ?: '-' }} / {{ $lead->company?->district ?: '-' }}
                         </span>
