@@ -64,3 +64,9 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Project Versioning
+
+- Current project version is tracked in [VERSION](VERSION).
+- Release notes are tracked in [CHANGELOG.md](CHANGELOG.md).
+- For each change, version is updated and changes are pushed with a versioned commit/tag.
