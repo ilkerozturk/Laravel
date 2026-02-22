@@ -196,7 +196,8 @@
                     <th class="px-4 py-3">
                         <input id="check-all-companies" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500">
                     </th>
-                    <th class="px-4 py-3">Firma</th>
+                    <th class="px-4 py-3 w-[250px] max-w-[250px]">Firma</th>
+                    <th class="px-4 py-3">E-posta</th>
                     <th class="px-4 py-3">Telefon</th>
                     <th class="px-4 py-3">Website</th>
                     <th class="px-4 py-3">Faaliyet</th>
@@ -213,7 +214,10 @@
                     <td class="px-4 py-3">
                         <input form="bulk-delete-form" class="company-checkbox h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" type="checkbox" name="company_ids[]" value="{{ $company->id }}">
                     </td>
-                    <td class="px-4 py-3 font-medium text-gray-900 js-company-name">{{ $company->name }}</td>
+                    <td class="px-4 py-3 w-[250px] max-w-[250px] font-medium text-gray-900 js-company-name">
+                        <span class="block max-w-[230px] truncate">{{ $company->name }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-gray-600 js-company-email">{{ $company->email ?: '-' }}</td>
                     <td class="px-4 py-3 text-gray-600 js-company-phone">{{ $company->phone ?: '-' }}</td>
                     <td class="px-4 py-3 js-company-website">
                         @if($company->website)
@@ -348,7 +352,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="px-6 py-12 text-center">
+                    <td colspan="11" class="px-6 py-12 text-center">
                         <div class="flex flex-col items-center gap-2">
                             <i data-lucide="inbox" class="h-10 w-10 text-gray-300"></i>
                             <p class="text-sm text-gray-500">Henüz kayıt yok.</p>
@@ -487,11 +491,15 @@ function updateCompanyRow(company) {
     if (!row) return;
 
     const nameCell = row.querySelector('.js-company-name');
+    const emailCell = row.querySelector('.js-company-email');
     const phoneCell = row.querySelector('.js-company-phone');
     const websiteCell = row.querySelector('.js-company-website');
     const activityCell = row.querySelector('.js-company-activity');
 
-    if (nameCell) nameCell.textContent = company.name || '-';
+    if (nameCell) {
+        nameCell.innerHTML = `<span class="block max-w-[230px] truncate">${escapeHtml(company.name || '-')}</span>`;
+    }
+    if (emailCell) emailCell.textContent = company.email || '-';
     if (phoneCell) phoneCell.textContent = company.phone || '-';
 
     if (websiteCell) {
