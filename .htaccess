@@ -14,6 +14,9 @@ Require all denied
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
+# Force opening URL to /index.php
+RewriteRule ^$ /index.php [R=302,L]
+
 # If domain document root points to project root instead of /public,
 # internally route requests into /public.
 RewriteCond %{REQUEST_URI} !^/public/

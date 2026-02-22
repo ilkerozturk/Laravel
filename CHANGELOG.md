@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.2] - 2026-02-22
+### Changed
+- Root `.htaccess` updated to redirect `/` to `/index.php` as requested.
+- Existing root-to-`public` fallback rewrite preserved for shared-host compatibility.
+
 ## [1.0.1] - 2026-02-22
 ### Fixed
 - Added root fallback routing for shared-host deployments where document root points to project root instead of `public`.
