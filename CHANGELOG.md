@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.1] - 2026-02-22
+### Fixed
+- Added root fallback routing for shared-host deployments where document root points to project root instead of `public`.
+- Added root `index.php` proxy that boots `public/index.php` to prevent LiteSpeed/Apache 404 on `/` and `/login`.
+
 ## [1.0.0] - 2026-02-22
 ### Added
 - Import log management: single delete, bulk delete, and clear-all actions in Import Logs page.

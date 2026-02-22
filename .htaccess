@@ -10,3 +10,13 @@ Deny from all
 Require all denied
 </IfModule>
 </Files>
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# If domain document root points to project root instead of /public,
+# internally route requests into /public.
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
