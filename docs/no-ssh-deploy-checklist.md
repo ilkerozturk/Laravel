@@ -36,7 +36,6 @@ Breeze yoksa once panelden dependency kurulumu gerekir.
 - `/dashboard`
 - `/companies`
 - `/leads`
-- `/follow-ups`
 - `/settings`
 - `/reports`
 - `/import-logs`

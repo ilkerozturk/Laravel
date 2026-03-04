@@ -3,19 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
-use App\Models\FollowUp;
 use App\Models\Lead;
-use App\Models\OutreachEmail;
 
 class ReportController extends Controller
 {
     public function index()
     {
         $totalLeads = Lead::count();
-        $won = Lead::where('status', 'won')->count();
-        $lost = Lead::where('status', 'lost')->count();
-        $postponed = Lead::where('status', 'postponed')->count();
-        $conversion = $totalLeads > 0 ? round(($won / $totalLeads) * 100, 2) : 0;
+        $won = Lead::where('status', Lead::STATUS_WON)->count();
+        $lost = Lead::where('status', Lead::STATUS_LOST)->count();
+        $demoPreparing = Lead::where('status', Lead::STATUS_DEMO_PREPARING)->count();
+        $demoReady = Lead::where('status', Lead::STATUS_DEMO_READY)->count();
+        $called = Lead::where('status', Lead::STATUS_CALLED)->count();
+        $postponed = Lead::where('status', Lead::STATUS_POSTPONED)->count();
 
         $topCities = Company::query()
             ->selectRaw('city, count(*) as total')
@@ -26,26 +26,15 @@ class ReportController extends Controller
             ->limit(10)
             ->get();
 
-        $emailStats = [
-            'sent' => OutreachEmail::where('status', 'sent')->count(),
-            'failed' => OutreachEmail::where('status', 'failed')->count(),
-        ];
-
-        $followUpStats = [
-            'open' => FollowUp::where('status', 'open')->count(),
-            'due' => FollowUp::where('status', 'open')->where('due_at', '<=', now())->count(),
-            'done' => FollowUp::where('status', 'done')->count(),
-        ];
-
         return view('reports.index', compact(
             'totalLeads',
             'won',
             'lost',
+            'demoPreparing',
+            'demoReady',
+            'called',
             'postponed',
-            'conversion',
-            'topCities',
-            'emailStats',
-            'followUpStats'
+            'topCities'
         ));
     }
 }

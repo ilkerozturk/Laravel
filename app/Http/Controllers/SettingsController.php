@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
@@ -28,10 +27,6 @@ class SettingsController extends Controller
             'logo_height' => AppSetting::getValue('logo_height', '40'),
             'login_logo_url' => AppSetting::getValue('login_logo_url', ''),
             'login_logo_height' => AppSetting::getValue('login_logo_height', '40'),
-            'cloud_opus_api_key' => AppSetting::getValue('cloud_opus_api_key', (string) env('CLOUD_OPUS_API_KEY', '')),
-            'cloud_opus_model' => AppSetting::getValue('cloud_opus_model', (string) env('CLOUD_OPUS_MODEL', 'claude-opus-4-1-20250805')),
-            'cloud_opus_base_url' => AppSetting::getValue('cloud_opus_base_url', (string) env('CLOUD_OPUS_BASE_URL', 'https://api.anthropic.com/v1/messages')),
-            'cloud_opus_max_tokens' => AppSetting::getValue('cloud_opus_max_tokens', (string) env('CLOUD_OPUS_MAX_TOKENS', '2400')),
         ];
 
         $users = User::query()->orderBy('created_at')->get();
@@ -50,17 +45,13 @@ class SettingsController extends Controller
             'smtp_from_address' => ['required', 'email', 'max:190'],
             'smtp_from_name' => ['nullable', 'string', 'max:120'],
             'follow_up_days' => ['required', 'integer', 'min:1', 'max:60'],
-            'cloud_opus_api_key' => ['nullable', 'string', 'max:300'],
-            'cloud_opus_model' => ['required', 'string', 'max:120'],
-            'cloud_opus_base_url' => ['required', 'url', 'max:255'],
-            'cloud_opus_max_tokens' => ['required', 'integer', 'min:256', 'max:8192'],
         ]);
 
         foreach ($data as $key => $value) {
             AppSetting::setValue($key, is_null($value) ? null : (string) $value);
         }
 
-        return redirect()->route('settings.index')->with('status', 'SMTP, takip ve Cloud Opus ayarlari kaydedildi.');
+        return redirect()->route('settings.index')->with('status', 'SMTP ve takip ayarlari kaydedildi.');
     }
 
     public function uploadLogo(Request $request): RedirectResponse
@@ -103,44 +94,6 @@ class SettingsController extends Controller
         }
 
         return redirect()->route('settings.index')->with('status', 'Giriş ekranı logosu kaydedildi.');
-    }
-
-    public function testCloudOpus(): RedirectResponse
-    {
-        $apiKey = trim((string) AppSetting::getValue('cloud_opus_api_key', (string) env('CLOUD_OPUS_API_KEY', '')));
-        $model = trim((string) AppSetting::getValue('cloud_opus_model', (string) env('CLOUD_OPUS_MODEL', 'claude-opus-4-1-20250805')));
-        $baseUrl = trim((string) AppSetting::getValue('cloud_opus_base_url', (string) env('CLOUD_OPUS_BASE_URL', 'https://api.anthropic.com/v1/messages')));
-
-        if ($apiKey === '') {
-            return redirect()->route('settings.index')->with('status', 'Cloud Opus testi basarisiz: API anahtari tanimli degil.');
-        }
-
-        try {
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'x-api-key' => $apiKey,
-                    'anthropic-version' => '2023-06-01',
-                    'content-type' => 'application/json',
-                ])
-                ->post($baseUrl, [
-                    'model' => $model,
-                    'max_tokens' => 32,
-                    'messages' => [
-                        ['role' => 'user', 'content' => 'ping'],
-                    ],
-                ]);
-
-            if (!$response->successful()) {
-                $code = $response->status();
-                $msg = (string) data_get($response->json(), 'error.message', 'Bilinmeyen hata');
-                return redirect()->route('settings.index')->with('status', "Cloud Opus testi basarisiz ({$code}): {$msg}");
-            }
-
-            $respModel = (string) data_get($response->json(), 'model', $model);
-            return redirect()->route('settings.index')->with('status', "Cloud Opus baglantisi basarili. Model: {$respModel}");
-        } catch (\Throwable $e) {
-            return redirect()->route('settings.index')->with('status', 'Cloud Opus testi basarisiz: ' . $e->getMessage());
-        }
     }
 
     public function storeUser(Request $request): RedirectResponse

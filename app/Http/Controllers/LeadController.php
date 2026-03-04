@@ -2,13 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AppSetting;
-use App\Models\FollowUp;
 use App\Models\Lead;
-use App\Models\OutreachEmail;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,16 +12,19 @@ class LeadController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Lead::with(['company', 'outreachEmails' => function ($q) {
-                $q->latest();
-            }])
+        $statusOptions = Lead::statusOptions();
+
+        $query = Lead::with('company')
             ->withMax(['followUps as open_follow_up_due_at' => function ($q) {
                 $q->where('status', 'open');
             }], 'due_at')
             ->latest();
 
         if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
+            $status = (string) $request->string('status');
+            if (array_key_exists($status, $statusOptions)) {
+                $query->where('status', $status);
+            }
         }
         if ($request->filled('city')) {
             $query->whereHas('company', function ($q) use ($request) {
@@ -54,118 +52,32 @@ class LeadController extends Controller
             ->orderBy('companies.city')
             ->pluck('companies.city');
 
-        return view('leads.index', compact('leads', 'cities'));
+        return view('leads.index', compact('leads', 'cities', 'statusOptions'));
     }
 
     public function updateStatus(Request $request, Lead $lead): RedirectResponse
     {
+        $statusOptions = Lead::statusOptions();
+
         $data = $request->validate([
             'status' => [
-                'required',
-                Rule::in(['new', 'demo_ready', 'email_sent', 'call_due', 'won', 'lost', 'postponed']),
+                'nullable',
+                Rule::in(array_keys($statusOptions)),
             ],
             'notes' => ['nullable', 'string'],
         ]);
 
-        $lead->update($data);
+        $payload = [
+            'notes' => $data['notes'] ?? null,
+        ];
 
-        if (($data['status'] ?? null) === 'email_sent') {
-            $this->ensureFollowUp($lead);
+        if (array_key_exists('status', $data) && !empty($data['status']) && $data['status'] !== $lead->status) {
+            $payload['status'] = $data['status'];
         }
+
+        $lead->update($payload);
 
         return redirect()->route('leads.index')->with('status', 'Lead durumu guncellendi.');
-    }
-
-    public function quickStatus(Request $request, Lead $lead): RedirectResponse
-    {
-        $data = $request->validate([
-            'status' => [
-                'required',
-                Rule::in(['won', 'lost', 'postponed']),
-            ],
-        ]);
-
-        $lead->update(['status' => $data['status']]);
-
-        return redirect()->route('leads.index')->with('status', 'Hizli durum guncellendi.');
-    }
-
-    public function sendEmail(Request $request, Lead $lead): RedirectResponse
-    {
-        $data = $request->validate([
-            'to_email' => ['required', 'email', 'max:190'],
-            'subject' => ['required', 'string', 'max:255'],
-            'body_html' => ['required', 'string'],
-        ]);
-
-        $this->applySmtpSettings();
-
-        try {
-            Mail::html($data['body_html'], function ($message) use ($data): void {
-                $message->to($data['to_email'])
-                    ->subject($data['subject']);
-            });
-
-            OutreachEmail::create([
-                'lead_id' => $lead->id,
-                'to_email' => $data['to_email'],
-                'subject' => $data['subject'],
-                'body_html' => $data['body_html'],
-                'status' => 'sent',
-                'sent_at' => now(),
-            ]);
-
-            $lead->update(['status' => 'email_sent']);
-            $this->ensureFollowUp($lead);
-
-            return redirect()->route('leads.index')->with('status', 'Mail gonderildi ve 10 gunluk takip gorevi olusturuldu.');
-        } catch (\Throwable $e) {
-            OutreachEmail::create([
-                'lead_id' => $lead->id,
-                'to_email' => $data['to_email'],
-                'subject' => $data['subject'],
-                'body_html' => $data['body_html'],
-                'status' => 'failed',
-            ]);
-
-            return redirect()->route('leads.index')->with('status', 'Mail gonderimi basarisiz: ' . $e->getMessage());
-        }
-    }
-
-    private function ensureFollowUp(Lead $lead): void
-    {
-        $days = (int) (AppSetting::getValue('follow_up_days', env('FOLLOW_UP_DAYS', '10')) ?: 10);
-        $dueAt = now()->addDays(max(1, $days));
-
-        FollowUp::query()->updateOrCreate(
-            ['lead_id' => $lead->id, 'status' => 'open'],
-            ['due_at' => $dueAt]
-        );
-    }
-
-    private function applySmtpSettings(): void
-    {
-        $host = AppSetting::getValue('smtp_host');
-        $port = AppSetting::getValue('smtp_port');
-        $username = AppSetting::getValue('smtp_username');
-        $password = AppSetting::getValue('smtp_password');
-        $encryption = AppSetting::getValue('smtp_encryption');
-        $fromAddress = AppSetting::getValue('smtp_from_address');
-        $fromName = AppSetting::getValue('smtp_from_name');
-
-        if (!$host || !$port || !$fromAddress) {
-            throw new \RuntimeException('SMTP ayarlari eksik. Ayarlar sayfasini doldurun.');
-        }
-
-        Config::set('mail.default', 'smtp');
-        Config::set('mail.mailers.smtp.transport', 'smtp');
-        Config::set('mail.mailers.smtp.host', $host);
-        Config::set('mail.mailers.smtp.port', (int) $port);
-        Config::set('mail.mailers.smtp.username', $username ?: null);
-        Config::set('mail.mailers.smtp.password', $password ?: null);
-        Config::set('mail.mailers.smtp.encryption', $encryption ?: null);
-        Config::set('mail.from.address', $fromAddress);
-        Config::set('mail.from.name', $fromName ?: 'BT Places');
     }
 
     public function exportCsv(Request $request)
@@ -191,7 +103,7 @@ class LeadController extends Controller
                 $lead->company?->email,
                 $lead->company?->city,
                 $lead->company?->district,
-                $lead->status,
+                Lead::statusLabel($lead->status),
                 $lead->notes,
                 $dueAt,
             ]);

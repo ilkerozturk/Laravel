@@ -3,6 +3,9 @@
 @section('page-title', 'Firmalar')
 
 @section('content')
+@php
+    $leadStatusOptions = \App\Models\Lead::statusOptions();
+@endphp
 {{-- Google Places Import --}}
 <div class="mb-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
     <div class="mb-4 flex items-center gap-3">
@@ -202,8 +205,6 @@
                     <th class="px-4 py-3">Website</th>
                     <th class="px-4 py-3">Faaliyet</th>
                     <th class="px-4 py-3">Google</th>
-                    <th class="px-4 py-3 min-w-[280px]">Demo Prompt</th>
-                    <th class="px-4 py-3 min-w-[220px]">Demo</th>
                     <th class="px-4 py-3">Lead</th>
                     <th class="px-4 py-3">İşlem</th>
                 </tr>
@@ -252,76 +253,19 @@
                         @endif
                     </td>
                     <td class="px-4 py-3">
-                        <form method="post" action="{{ route('companies.update-demo-prompt', $company) }}">
-                            @csrf
-                            @method('PATCH')
-                            <textarea name="demo_prompt" rows="3" placeholder="Firma detaylarını buraya yazın..."
-                                      class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">{{ $company->demo_prompt }}</textarea>
-                            <button type="submit" class="mt-1.5 flex items-center gap-1.5 rounded-lg bg-gray-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700">
-                                <i data-lucide="save" class="h-3 w-3"></i>
-                                Kaydet
-                            </button>
-                        </form>
-                    </td>
-                    <td class="px-4 py-3">
-                        <button type="button"
-                                class="demo-generate-btn flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                data-start-url="{{ route('companies.demo-projects.start', $company) }}"
-                                data-prompt-ready="{{ trim((string) $company->demo_prompt) !== '' ? '1' : '0' }}"
-                                {{ trim((string) $company->demo_prompt) === '' ? 'disabled' : '' }}>
-                            <i data-lucide="globe" class="h-3.5 w-3.5"></i>
-                            Website Yap
-                        </button>
-
-                        <div class="demo-progress-wrap mt-2">
-                            <div class="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                                <div class="demo-progress-bar h-full rounded-full bg-gradient-to-r from-brand-400 to-brand-600 transition-all duration-300"
-                                     style="width: {{ (int) ($company->latestDemoProject->progress_percent ?? 0) }}%"></div>
-                            </div>
-                            <small class="demo-progress-text mt-0.5 text-xs text-gray-500">{{ (int) ($company->latestDemoProject->progress_percent ?? 0) }}%</small>
-                        </div>
-
-                        @if(trim((string) $company->demo_prompt) === '')
-                            <p class="mt-1 text-xs text-amber-500">Önce prompt kaydedin</p>
-                        @endif
-
-                        <div class="demo-download-wrap mt-2">
-                            @if($company->latestDemoProject && $company->latestDemoProject->status === 'generated')
-                                <a class="demo-download-link inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
-                                   href="{{ route('demo-projects.download', $company->latestDemoProject) }}">
-                                    <i data-lucide="download" class="h-3 w-3"></i>
-                                    İndir (ZIP)
-                                </a>
-                            @elseif($company->latestDemoProject && $company->latestDemoProject->status === 'failed')
-                                <span class="inline-flex items-center gap-1 text-xs text-red-500"><i data-lucide="alert-circle" class="h-3 w-3"></i> Hata</span>
-                            @else
-                                <span class="text-xs text-gray-400">-</span>
-                            @endif
-                        </div>
-                    </td>
-                    <td class="px-4 py-3">
                         @if($company->lead)
-                            @php
-                                $statusColors = [
-                                    'new' => 'bg-blue-50 text-blue-700',
-                                    'demo_ready' => 'bg-violet-50 text-violet-700',
-                                    'email_sent' => 'bg-cyan-50 text-cyan-700',
-                                    'call_due' => 'bg-amber-50 text-amber-700',
-                                    'won' => 'bg-emerald-50 text-emerald-700',
-                                    'lost' => 'bg-red-50 text-red-700',
-                                    'postponed' => 'bg-gray-100 text-gray-700',
-                                ];
-                                $cls = $statusColors[$company->lead->status] ?? 'bg-gray-100 text-gray-700';
-                            @endphp
-                            <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium {{ $cls }}">{{ $company->lead->status }}</span>
+                            <span class="js-company-lead inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium {{ \App\Models\Lead::statusBadgeClass($company->lead->status) }}">{{ \App\Models\Lead::statusLabel($company->lead->status) }}</span>
                         @else
-                            <span class="text-gray-400">-</span>
+                            <span class="js-company-lead text-gray-400">-</span>
                         @endif
                     </td>
                     <td class="px-4 py-3">
                         @php
                             $editCompanyPayload = json_encode([
                                 'name' => $company->name,
+                                'company_title' => $company->company_title,
+                                'tax_office' => $company->tax_office,
+                                'tax_number' => $company->tax_number,
                                 'phone' => $company->phone,
                                 'email' => $company->email,
                                 'address' => $company->address,
@@ -330,6 +274,7 @@
                                 'website' => $company->website,
                                 'google_category' => $company->google_category,
                                 'activity_area' => $company->activity_area,
+                                'lead_status' => $company->lead?->status,
                             ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
                         @endphp
                         <div class="flex flex-nowrap items-center justify-center gap-1.5 whitespace-nowrap">
@@ -352,7 +297,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="11" class="px-6 py-12 text-center">
+                    <td colspan="9" class="px-6 py-12 text-center">
                         <div class="flex flex-col items-center gap-2">
                             <i data-lucide="inbox" class="h-10 w-10 text-gray-300"></i>
                             <p class="text-sm text-gray-500">Henüz kayıt yok.</p>
@@ -395,6 +340,18 @@
                     <label class="mb-1.5 block text-xs font-medium text-gray-500">Firma Adı *</label>
                     <input id="edit-name" name="name" required class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
                 </div>
+                <div class="sm:col-span-2">
+                    <label class="mb-1.5 block text-xs font-medium text-gray-500">Firma Ünvanı</label>
+                    <input id="edit-company_title" name="company_title" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-medium text-gray-500">Vergi Dairesi</label>
+                    <input id="edit-tax_office" name="tax_office" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-xs font-medium text-gray-500">Vergi Numarası</label>
+                    <input id="edit-tax_number" name="tax_number" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
+                </div>
                 <div>
                     <label class="mb-1.5 block text-xs font-medium text-gray-500">Telefon</label>
                     <input id="edit-phone" name="phone" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
@@ -426,6 +383,15 @@
                 <div class="sm:col-span-2">
                     <label class="mb-1.5 block text-xs font-medium text-gray-500">Faaliyet Alanı</label>
                     <input id="edit-activity_area" name="activity_area" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="mb-1.5 block text-xs font-medium text-gray-500">Lead Durumu</label>
+                    <select id="edit-lead_status" name="lead_status" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
+                        <option value="">Seçiniz</option>
+                        @foreach($leadStatusOptions as $statusValue => $statusLabel)
+                            <option value="{{ $statusValue }}">{{ $statusLabel }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
             <div class="mt-6 flex items-center justify-end gap-3">
@@ -495,6 +461,7 @@ function updateCompanyRow(company) {
     const phoneCell = row.querySelector('.js-company-phone');
     const websiteCell = row.querySelector('.js-company-website');
     const activityCell = row.querySelector('.js-company-activity');
+    const leadCell = row.querySelector('.js-company-lead');
 
     if (nameCell) {
         nameCell.innerHTML = `<span class="block max-w-[230px] truncate">${escapeHtml(company.name || '-')}</span>`;
@@ -530,10 +497,23 @@ function updateCompanyRow(company) {
         }
     }
 
+    if (leadCell) {
+        if (company.lead_status && company.lead_status_label) {
+            leadCell.className = `js-company-lead inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${company.lead_status_class || 'bg-gray-100 text-gray-700'}`;
+            leadCell.textContent = company.lead_status_label;
+        } else {
+            leadCell.className = 'js-company-lead text-gray-400';
+            leadCell.textContent = '-';
+        }
+    }
+
     const editBtn = row.querySelector('.edit-company-btn');
     if (editBtn) {
         editBtn.setAttribute('data-company', JSON.stringify({
             name: company.name || '',
+            company_title: company.company_title || '',
+            tax_office: company.tax_office || '',
+            tax_number: company.tax_number || '',
             phone: company.phone || '',
             email: company.email || '',
             address: company.address || '',
@@ -541,7 +521,8 @@ function updateCompanyRow(company) {
             district: company.district || '',
             website: company.website || '',
             google_category: company.google_category || '',
-            activity_area: company.activity_area || ''
+            activity_area: company.activity_area || '',
+            lead_status: company.lead_status || ''
         }));
     }
 
@@ -552,6 +533,9 @@ function openEditModal(companyId, data) {
     const form = document.getElementById('editForm');
     form.action = companyUpdateUrlTemplate.replace('__COMPANY_ID__', companyId);
     document.getElementById('edit-name').value = data.name || '';
+    document.getElementById('edit-company_title').value = data.company_title || '';
+    document.getElementById('edit-tax_office').value = data.tax_office || '';
+    document.getElementById('edit-tax_number').value = data.tax_number || '';
     document.getElementById('edit-phone').value = data.phone || '';
     document.getElementById('edit-email').value = data.email || '';
     document.getElementById('edit-address').value = data.address || '';
@@ -560,6 +544,7 @@ function openEditModal(companyId, data) {
     document.getElementById('edit-website').value = data.website || '';
     document.getElementById('edit-google_category').value = data.google_category || '';
     document.getElementById('edit-activity_area').value = data.activity_area || '';
+    document.getElementById('edit-lead_status').value = data.lead_status || '';
     document.getElementById('editModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     setTimeout(() => lucide.createIcons(), 50);
@@ -643,8 +628,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    const demoBase = '{{ url('/demo-projects') }}';
-
     const checkAll = document.getElementById('check-all-companies');
     const checkboxes = document.querySelectorAll('.company-checkbox');
     if (checkAll) {
@@ -652,69 +635,6 @@ document.addEventListener('DOMContentLoaded', function () {
             checkboxes.forEach((cb) => { cb.checked = checkAll.checked; });
         });
     }
-
-    document.querySelectorAll('.demo-generate-btn').forEach((btn) => {
-        btn.addEventListener('click', async function () {
-            if (btn.dataset.promptReady !== '1') return;
-            btn.disabled = true;
-            const row = btn.closest('td');
-            const bar = row.querySelector('.demo-progress-bar');
-            const text = row.querySelector('.demo-progress-text');
-            const downloadWrap = row.querySelector('.demo-download-wrap');
-            const setProgress = (val, label) => {
-                const pct = Math.max(0, Math.min(100, Number(val) || 0));
-                bar.style.width = pct + '%';
-                text.textContent = (label || (pct + '%'));
-            };
-            setProgress(2, 'Başlatılıyor...');
-            try {
-                const startRes = await fetch(btn.dataset.startUrl, {
-                    method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' }
-                });
-                const startJson = await startRes.json();
-                if (!startRes.ok) { setProgress(0, startJson.message || 'Başlatma hatası'); btn.disabled = false; return; }
-                const demoId = startJson.demo_project_id;
-                const progressUrl = `${demoBase}/${demoId}/progress`;
-                const runUrl = `${demoBase}/${demoId}/run`;
-                const poll = async () => {
-                    try {
-                        const pRes = await fetch(progressUrl, { headers: { 'Accept': 'application/json' } });
-                        const pJson = await pRes.json();
-                        if (pRes.ok) {
-                            setProgress(pJson.progress_percent, pJson.status === 'failed' ? 'Hata' : (pJson.progress_percent + '%'));
-                            if (pJson.can_download && pJson.download_url) downloadWrap.innerHTML = `<a class="demo-download-link inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100" href="${pJson.download_url}">İndir (ZIP)</a>`;
-                            if (pJson.status === 'failed' && pJson.error_message) downloadWrap.innerHTML = '<span class="text-xs text-red-500">Hata: ' + pJson.error_message + '</span>';
-                        }
-                    } catch (e) {}
-                };
-                const interval = setInterval(poll, 1200);
-                let runRes = null, runJson = {};
-                try {
-                    runRes = await fetch(runUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' } });
-                    try { runJson = await runRes.json(); } catch (e) { runJson = { message: 'Sunucu JSON dönmedi' }; }
-                } catch (e) { runJson = { message: 'Bağlantı kesildi...' }; }
-                await poll();
-                const waitUntil = Date.now() + 90000;
-                let completed = false;
-                while (Date.now() < waitUntil && !completed) {
-                    await new Promise(r => setTimeout(r, 1200));
-                    try {
-                        const pRes = await fetch(progressUrl, { headers: { 'Accept': 'application/json' } });
-                        const pJson = await pRes.json();
-                        if (pRes.ok) {
-                            setProgress(pJson.progress_percent, pJson.status === 'failed' ? 'Hata' : (pJson.progress_percent + '%'));
-                            if (pJson.can_download && pJson.download_url) { downloadWrap.innerHTML = `<a class="demo-download-link inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100" href="${pJson.download_url}">İndir (ZIP)</a>`; completed = true; break; }
-                            if (pJson.status === 'failed') { downloadWrap.innerHTML = '<span class="text-xs text-red-500">Hata: ' + (pJson.error_message || 'Demo hatası') + '</span>'; completed = true; break; }
-                        }
-                    } catch (e) {}
-                }
-                clearInterval(interval);
-                if (!completed && runRes && !runRes.ok) { setProgress(100, 'Hata'); downloadWrap.innerHTML = '<span class="text-xs text-red-500">Hata: ' + (runJson.message || 'Demo hatası') + '</span>'; }
-                else if (!completed && !runRes) { setProgress(bar.style.width.replace('%', ''), 'Beklemede'); downloadWrap.innerHTML = '<span class="text-xs text-amber-500">' + (runJson.message || 'Bağlantı hatası') + '</span>'; }
-            } catch (e) { setProgress(0, 'Bağlantı hatası'); }
-            finally { btn.disabled = false; }
-        });
-    });
     lucide.createIcons();
 });
 </script>

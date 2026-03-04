@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\Rule;
 
 class CompanyController extends Controller
 {
@@ -42,7 +43,7 @@ class CompanyController extends Controller
             });
         }
 
-        $companies = $query->with(['lead', 'latestDemoProject'])->paginate(20)->withQueryString();
+        $companies = $query->with(['lead'])->paginate(20)->withQueryString();
         $cities = Company::query()
             ->whereNotNull('city')
             ->where('city', '!=', '')
@@ -105,6 +106,9 @@ class CompanyController extends Controller
         $data = $request->validate([
             'place_id' => ['nullable', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:190'],
+            'company_title' => ['nullable', 'string', 'max:255'],
+            'tax_office' => ['nullable', 'string', 'max:190'],
+            'tax_number' => ['nullable', 'string', 'max:64'],
             'phone' => ['nullable', 'string', 'max:64'],
             'email' => ['nullable', 'email', 'max:190'],
             'address' => ['nullable', 'string', 'max:255'],
@@ -113,7 +117,6 @@ class CompanyController extends Controller
             'website' => ['nullable', 'string', 'max:255'],
             'google_category' => ['nullable', 'string', 'max:190'],
             'activity_area' => ['nullable', 'string', 'max:255'],
-            'demo_prompt' => ['nullable', 'string'],
         ]);
 
         if (empty($data['place_id'])) {
@@ -126,7 +129,7 @@ class CompanyController extends Controller
             Lead::firstOrCreate([
                 'company_id' => $company->id,
             ], [
-                'status' => 'new',
+                'status' => Lead::STATUS_DEMO_READY,
             ]);
         }
 
@@ -137,6 +140,9 @@ class CompanyController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:190'],
+            'company_title' => ['nullable', 'string', 'max:255'],
+            'tax_office' => ['nullable', 'string', 'max:190'],
+            'tax_number' => ['nullable', 'string', 'max:64'],
             'phone' => ['nullable', 'string', 'max:64'],
             'email' => ['nullable', 'email', 'max:190'],
             'address' => ['nullable', 'string', 'max:255'],
@@ -145,9 +151,22 @@ class CompanyController extends Controller
             'website' => ['nullable', 'string', 'max:255'],
             'google_category' => ['nullable', 'string', 'max:190'],
             'activity_area' => ['nullable', 'string', 'max:255'],
+            'lead_status' => ['nullable', Rule::in(array_keys(Lead::statusOptions()))],
         ]);
 
-        $company->update($data);
+        $companyData = $data;
+        unset($companyData['lead_status']);
+
+        $company->update($companyData);
+
+        if (!empty($data['lead_status'])) {
+            Lead::query()->updateOrCreate(
+                ['company_id' => $company->id],
+                ['status' => $data['lead_status']]
+            );
+        }
+
+        $lead = Lead::query()->where('company_id', $company->id)->first();
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
@@ -155,6 +174,9 @@ class CompanyController extends Controller
                 'company' => [
                     'id' => $company->id,
                     'name' => $company->name,
+                    'company_title' => $company->company_title,
+                    'tax_office' => $company->tax_office,
+                    'tax_number' => $company->tax_number,
                     'phone' => $company->phone,
                     'email' => $company->email,
                     'address' => $company->address,
@@ -163,24 +185,14 @@ class CompanyController extends Controller
                     'website' => $company->website,
                     'google_category' => $company->google_category,
                     'activity_area' => $company->activity_area,
+                    'lead_status' => $lead?->status,
+                    'lead_status_label' => $lead ? Lead::statusLabel($lead->status) : null,
+                    'lead_status_class' => $lead ? Lead::statusBadgeClass($lead->status) : null,
                 ],
             ]);
         }
 
         return redirect()->route('companies.index')->with('status', 'Firma bilgileri güncellendi.');
-    }
-
-    public function updateDemoPrompt(Request $request, Company $company): RedirectResponse
-    {
-        $data = $request->validate([
-            'demo_prompt' => ['required', 'string', 'max:20000'],
-        ]);
-
-        $company->update([
-            'demo_prompt' => $data['demo_prompt'],
-        ]);
-
-        return redirect()->route('companies.index')->with('status', 'Demo prompt kaydedildi.');
     }
 
     public function importPlaces(Request $request): RedirectResponse
@@ -281,7 +293,7 @@ class CompanyController extends Controller
                 if (empty($company->website)) {
                     $lead = Lead::firstOrCreate(
                         ['company_id' => $company->id],
-                        ['status' => 'new']
+                        ['status' => Lead::STATUS_DEMO_READY]
                     );
                     if ($lead->wasRecentlyCreated) {
                         $newLeadCount++;
@@ -353,7 +365,6 @@ class CompanyController extends Controller
                 if ($lead) {
                     DB::table('follow_ups')->where('lead_id', $lead->id)->delete();
                     DB::table('outreach_emails')->where('lead_id', $lead->id)->delete();
-                    DB::table('demo_sites')->where('lead_id', $lead->id)->delete();
                     $lead->delete();
                 }
                 $company->delete();

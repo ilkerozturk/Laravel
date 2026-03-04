@@ -132,11 +132,6 @@
             <i data-lucide="users" class="h-5 w-5 shrink-0"></i>
             Leadler
         </a>
-        <a href="{{ route('follow-ups.index') }}"
-           class="nav-link flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium {{ request()->routeIs('follow-ups.*') ? 'bg-sidebar-active text-white active' : 'text-slate-300 hover:bg-sidebar-hover hover:text-white' }}">
-            <i data-lucide="phone-call" class="h-5 w-5 shrink-0"></i>
-            Takipler
-        </a>
         <a href="{{ route('reports.index') }}"
            class="nav-link flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium {{ request()->routeIs('reports.*') ? 'bg-sidebar-active text-white active' : 'text-slate-300 hover:bg-sidebar-hover hover:text-white' }}">
             <i data-lucide="bar-chart-3" class="h-5 w-5 shrink-0"></i>
@@ -214,6 +209,16 @@
 </div>
 
 <script>
+    window.LEAD_STATUS_CHART = {
+        labels: ['Arandı', 'Demo Hazırlanıyor', 'Demo Hazırlandı', 'İş alındı', 'İş Alınamadı', 'Beklemeye Alındı'],
+        colors: ['#f59e0b', '#06b6d4', '#8b5cf6', '#10b981', '#ef4444', '#94a3b8'],
+    };
+
+    window.REPORTS_FUNNEL_CHART = {
+        labels: ['Toplam Lead', 'Arandı', 'Demo Hazırlanıyor', 'Demo Hazırlandı', 'İş Alındı'],
+        colors: ['#818cf8', '#f59e0b', '#06b6d4', '#8b5cf6', '#10b981'],
+    };
+
     // Initialize Lucide icons
     lucide.createIcons();
 

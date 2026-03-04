@@ -22,7 +22,6 @@ CREATE TABLE companies (
   google_category VARCHAR(190) NULL,
   activity_area VARCHAR(255) NULL,
   activity_confidence DECIMAL(4,3) NULL,
-  demo_prompt LONGTEXT NULL,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL
 );
@@ -31,23 +30,12 @@ CREATE TABLE leads (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   company_id BIGINT UNSIGNED NOT NULL UNIQUE,
   owner_user_id BIGINT UNSIGNED NULL,
-  status ENUM('new','demo_ready','email_sent','call_due','won','lost','postponed') NOT NULL DEFAULT 'new',
+  status ENUM('email_sent','called','demo_preparing','completed','won') NOT NULL DEFAULT 'demo_preparing',
   notes TEXT NULL,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL,
   CONSTRAINT fk_leads_company FOREIGN KEY (company_id) REFERENCES companies(id),
   CONSTRAINT fk_leads_owner FOREIGN KEY (owner_user_id) REFERENCES users(id)
-);
-
-CREATE TABLE demo_sites (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  lead_id BIGINT UNSIGNED NOT NULL,
-  prompt_text LONGTEXT NOT NULL,
-  deploy_url VARCHAR(255) NULL,
-  status ENUM('pending','generated','deployed','failed') NOT NULL DEFAULT 'pending',
-  created_at TIMESTAMP NULL,
-  updated_at TIMESTAMP NULL,
-  CONSTRAINT fk_demo_sites_lead FOREIGN KEY (lead_id) REFERENCES leads(id)
 );
 
 CREATE TABLE outreach_emails (
@@ -98,20 +86,4 @@ CREATE TABLE app_settings (
   `value` TEXT NULL,
   created_at TIMESTAMP NULL,
   updated_at TIMESTAMP NULL
-);
-
-CREATE TABLE demo_projects (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  company_id BIGINT UNSIGNED NOT NULL,
-  title VARCHAR(190) NOT NULL,
-  status ENUM('pending','generated','failed') NOT NULL DEFAULT 'pending',
-  prompt_text LONGTEXT NULL,
-  folder_path VARCHAR(255) NULL,
-  zip_path VARCHAR(255) NULL,
-  download_token VARCHAR(80) NOT NULL UNIQUE,
-  progress_percent TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  error_message TEXT NULL,
-  created_at TIMESTAMP NULL,
-  updated_at TIMESTAMP NULL,
-  CONSTRAINT fk_demo_projects_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
 );

@@ -87,38 +87,6 @@
                                class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
                     </div>
                 </div>
-                <div>
-                    <label class="mb-1.5 block text-xs font-medium text-gray-500">Cloud Opus API Key</label>
-                    <div class="relative">
-                        <i data-lucide="key-round" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"></i>
-                        <input name="cloud_opus_api_key" placeholder="sk-ant-..." value="{{ old('cloud_opus_api_key', $settings['cloud_opus_api_key']) }}"
-                               class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
-                    </div>
-                </div>
-                <div>
-                    <label class="mb-1.5 block text-xs font-medium text-gray-500">Cloud Opus Model</label>
-                    <div class="relative">
-                        <i data-lucide="bot" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"></i>
-                        <input name="cloud_opus_model" required placeholder="claude-opus-4-1-20250805" value="{{ old('cloud_opus_model', $settings['cloud_opus_model']) }}"
-                               class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
-                    </div>
-                </div>
-                <div>
-                    <label class="mb-1.5 block text-xs font-medium text-gray-500">Cloud Opus Endpoint</label>
-                    <div class="relative">
-                        <i data-lucide="link" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"></i>
-                        <input name="cloud_opus_base_url" required placeholder="https://api.anthropic.com/v1/messages" value="{{ old('cloud_opus_base_url', $settings['cloud_opus_base_url']) }}"
-                               class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
-                    </div>
-                </div>
-                <div>
-                    <label class="mb-1.5 block text-xs font-medium text-gray-500">Cloud Opus Max Tokens</label>
-                    <div class="relative">
-                        <i data-lucide="hash" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"></i>
-                        <input name="cloud_opus_max_tokens" type="number" min="256" max="8192" required value="{{ old('cloud_opus_max_tokens', $settings['cloud_opus_max_tokens']) }}"
-                               class="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
-                    </div>
-                </div>
                 <div class="sm:col-span-2">
                     <button type="submit" class="btn-primary flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-700">
                         <i data-lucide="save" class="h-4 w-4"></i>
@@ -276,42 +244,42 @@
                 </div>
             </form>
 
-            <div class="overflow-x-auto rounded-xl border border-gray-100">
-                <table class="w-full text-sm">
+            <div class="overflow-hidden rounded-xl border border-gray-100 hidden md:block">
+                <table class="w-full table-fixed text-sm">
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50/50 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                            <th class="px-4 py-3">Kullanıcı</th>
-                            <th class="px-4 py-3">E-posta</th>
-                            <th class="px-4 py-3">Rol</th>
-                            <th class="px-4 py-3">Yeni Şifre</th>
-                            <th class="px-4 py-3">İşlem</th>
+                            <th class="w-[20%] px-4 py-3">Kullanıcı</th>
+                            <th class="w-[26%] px-4 py-3">E-posta</th>
+                            <th class="w-[14%] px-4 py-3">Rol</th>
+                            <th class="w-[24%] px-4 py-3">Yeni Şifre</th>
+                            <th class="w-[16%] px-4 py-3">İşlem</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         @forelse($users as $user)
                             <tr>
                                 <td class="px-4 py-3">
-                                    <input form="user-update-{{ $user->id }}" name="name" value="{{ $user->name }}" required class="w-full min-w-[170px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
+                                    <input form="user-update-{{ $user->id }}" name="name" value="{{ $user->name }}" required class="w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
                                 </td>
                                 <td class="px-4 py-3">
-                                    <input form="user-update-{{ $user->id }}" name="email" type="email" value="{{ $user->email }}" required class="w-full min-w-[230px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
+                                    <input form="user-update-{{ $user->id }}" name="email" type="email" value="{{ $user->email }}" required class="w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
                                 </td>
                                 <td class="px-4 py-3">
-                                    <select form="user-update-{{ $user->id }}" name="role" class="w-full min-w-[130px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
+                                    <select form="user-update-{{ $user->id }}" name="role" class="w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
                                         <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>admin</option>
                                         <option value="sales" {{ $user->role === 'sales' ? 'selected' : '' }}>sales</option>
                                         <option value="operator" {{ $user->role === 'operator' ? 'selected' : '' }}>operator</option>
                                     </select>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <input form="user-update-{{ $user->id }}" name="password" type="password" placeholder="Boş bırakırsan değişmez" class="w-full min-w-[190px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
+                                    <input form="user-update-{{ $user->id }}" name="password" type="password" placeholder="Boş bırakırsan değişmez" class="w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="flex items-center gap-2">
+                                    <div class="flex flex-wrap items-center gap-2">
                                         <form id="user-update-{{ $user->id }}" method="post" action="{{ route('settings.users.update', $user) }}">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-700">
+                                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-2.5 py-2 text-xs font-semibold text-white hover:bg-brand-700">
                                                 <i data-lucide="save" class="h-3.5 w-3.5"></i>
                                                 Kaydet
                                             </button>
@@ -319,7 +287,7 @@
                                         <form method="post" action="{{ route('settings.users.destroy', $user) }}" onsubmit="return confirm('Bu kullanıcı silinsin mi?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-100">
+                                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-100">
                                                 <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
                                                 Sil
                                             </button>
@@ -335,30 +303,66 @@
                     </tbody>
                 </table>
             </div>
+
+            <div class="space-y-3 md:hidden">
+                @forelse($users as $user)
+                    <div class="rounded-xl border border-gray-100 bg-white p-4">
+                        <form method="post" action="{{ route('settings.users.update', $user) }}" class="space-y-3">
+                            @csrf
+                            @method('PATCH')
+
+                            <div>
+                                <label class="mb-1.5 block text-xs font-medium text-gray-500">Ad Soyad</label>
+                                <input name="name" value="{{ $user->name }}" required class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
+                            </div>
+
+                            <div>
+                                <label class="mb-1.5 block text-xs font-medium text-gray-500">E-posta</label>
+                                <input name="email" type="email" value="{{ $user->email }}" required class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
+                            </div>
+
+                            <div>
+                                <label class="mb-1.5 block text-xs font-medium text-gray-500">Rol</label>
+                                <select name="role" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
+                                    <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>admin</option>
+                                    <option value="sales" {{ $user->role === 'sales' ? 'selected' : '' }}>sales</option>
+                                    <option value="operator" {{ $user->role === 'operator' ? 'selected' : '' }}>operator</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="mb-1.5 block text-xs font-medium text-gray-500">Yeni Şifre</label>
+                                <input name="password" type="password" placeholder="Boş bırakırsan değişmez" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100">
+                            </div>
+
+                            <div class="pt-1">
+                                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-700">
+                                    <i data-lucide="save" class="h-3.5 w-3.5"></i>
+                                    Kaydet
+                                </button>
+                            </div>
+                        </form>
+
+                            <div class="mt-2 flex items-center gap-2">
+                                <form method="post" action="{{ route('settings.users.destroy', $user) }}" onsubmit="return confirm('Bu kullanıcı silinsin mi?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-100">
+                                        <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                        Sil
+                                    </button>
+                                </form>
+                            </div>
+                    </div>
+                @empty
+                    <div class="rounded-xl border border-gray-100 bg-white px-6 py-10 text-center text-sm text-gray-500">
+                        Kayıtlı kullanıcı bulunmuyor.
+                    </div>
+                @endforelse
+            </div>
         </div>
     </div>
 
-    {{-- Cloud Opus Test --}}
-    <div class="rounded-2xl border border-gray-100 bg-white shadow-sm">
-        <div class="flex items-center gap-3 border-b border-gray-100 px-6 py-4">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
-                <i data-lucide="bot" class="h-5 w-5"></i>
-            </div>
-            <div>
-                <h3 class="text-base font-semibold text-gray-800">Cloud Opus Bağlantı Testi</h3>
-                <p class="text-xs text-gray-500">Model erişimi ve API bağlantısını doğrulayın</p>
-            </div>
-        </div>
-        <div class="p-6">
-            <form method="post" action="{{ route('settings.test-cloud-opus') }}">
-                @csrf
-                <button type="submit" class="btn-primary flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-700">
-                    <i data-lucide="zap" class="h-4 w-4"></i>
-                    Cloud Opus Bağlantısını Test Et
-                </button>
-            </form>
-        </div>
-    </div>
 </div>
 @endsection
 

@@ -4,7 +4,7 @@
 
 @section('content')
 {{-- Lead Stats --}}
-<div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+<div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-7">
     <div class="stat-card group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
         <div class="absolute -right-3 -top-3 h-14 w-14 rounded-full bg-blue-50 opacity-80 group-hover:scale-125"></div>
         <div class="relative">
@@ -31,7 +31,7 @@
             <div class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 text-red-600">
                 <i data-lucide="x-circle" class="h-4 w-4"></i>
             </div>
-            <p class="text-xs font-medium text-gray-500">Kaybedilen</p>
+            <p class="text-xs font-medium text-gray-500">İş Alınamadı</p>
             <p class="mt-0.5 text-xl font-bold text-red-600">{{ number_format($lost) }}</p>
         </div>
     </div>
@@ -39,69 +39,40 @@
         <div class="absolute -right-3 -top-3 h-14 w-14 rounded-full bg-amber-50 opacity-80 group-hover:scale-125"></div>
         <div class="relative">
             <div class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                <i data-lucide="phone-call" class="h-4 w-4"></i>
+            </div>
+            <p class="text-xs font-medium text-gray-500">Arandı</p>
+            <p class="mt-0.5 text-xl font-bold text-amber-600">{{ number_format($called) }}</p>
+        </div>
+    </div>
+    <div class="stat-card group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div class="absolute -right-3 -top-3 h-14 w-14 rounded-full bg-violet-50 opacity-80 group-hover:scale-125"></div>
+        <div class="relative">
+            <div class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
+                <i data-lucide="hammer" class="h-4 w-4"></i>
+            </div>
+            <p class="text-xs font-medium text-gray-500">Demo Hazırlandı</p>
+            <p class="mt-0.5 text-xl font-bold text-violet-600">{{ number_format($demoReady) }}</p>
+        </div>
+    </div>
+    <div class="stat-card group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div class="absolute -right-3 -top-3 h-14 w-14 rounded-full bg-cyan-50 opacity-80 group-hover:scale-125"></div>
+        <div class="relative">
+            <div class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-100 text-cyan-600">
+                <i data-lucide="loader-circle" class="h-4 w-4"></i>
+            </div>
+            <p class="text-xs font-medium text-gray-500">Demo Hazırlanıyor</p>
+            <p class="mt-0.5 text-xl font-bold text-cyan-600">{{ number_format($demoPreparing) }}</p>
+        </div>
+    </div>
+    <div class="stat-card group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div class="absolute -right-3 -top-3 h-14 w-14 rounded-full bg-slate-100 opacity-80 group-hover:scale-125"></div>
+        <div class="relative">
+            <div class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-slate-200 text-slate-700">
                 <i data-lucide="pause-circle" class="h-4 w-4"></i>
             </div>
-            <p class="text-xs font-medium text-gray-500">Ertelenen</p>
-            <p class="mt-0.5 text-xl font-bold text-amber-600">{{ number_format($postponed) }}</p>
-        </div>
-    </div>
-    <div class="stat-card group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <div class="absolute -right-3 -top-3 h-14 w-14 rounded-full bg-brand-50 opacity-80 group-hover:scale-125"></div>
-        <div class="relative">
-            <div class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-600">
-                <i data-lucide="percent" class="h-4 w-4"></i>
-            </div>
-            <p class="text-xs font-medium text-gray-500">Dönüşüm Oranı</p>
-            <p class="mt-0.5 text-xl font-bold text-brand-600">%{{ $conversion }}</p>
-        </div>
-    </div>
-</div>
-
-{{-- Mail & Follow-up Stats --}}
-<div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-    <div class="stat-card group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <div class="relative">
-            <div class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                <i data-lucide="send" class="h-4 w-4"></i>
-            </div>
-            <p class="text-xs font-medium text-gray-500">Mail Gönderildi</p>
-            <p class="mt-0.5 text-xl font-bold text-gray-900">{{ number_format($emailStats['sent']) }}</p>
-        </div>
-    </div>
-    <div class="stat-card group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <div class="relative">
-            <div class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 text-red-600">
-                <i data-lucide="mail-x" class="h-4 w-4"></i>
-            </div>
-            <p class="text-xs font-medium text-gray-500">Mail Başarısız</p>
-            <p class="mt-0.5 text-xl font-bold text-red-600">{{ number_format($emailStats['failed']) }}</p>
-        </div>
-    </div>
-    <div class="stat-card group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <div class="relative">
-            <div class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-                <i data-lucide="phone" class="h-4 w-4"></i>
-            </div>
-            <p class="text-xs font-medium text-gray-500">Açık Takip</p>
-            <p class="mt-0.5 text-xl font-bold text-gray-900">{{ number_format($followUpStats['open']) }}</p>
-        </div>
-    </div>
-    <div class="stat-card group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <div class="relative">
-            <div class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
-                <i data-lucide="alarm-clock" class="h-4 w-4"></i>
-            </div>
-            <p class="text-xs font-medium text-gray-500">Süresi Gelen</p>
-            <p class="mt-0.5 text-xl font-bold text-amber-600">{{ number_format($followUpStats['due']) }}</p>
-        </div>
-    </div>
-    <div class="stat-card group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <div class="relative">
-            <div class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                <i data-lucide="check-circle-2" class="h-4 w-4"></i>
-            </div>
-            <p class="text-xs font-medium text-gray-500">Tamamlanan Takip</p>
-            <p class="mt-0.5 text-xl font-bold text-emerald-600">{{ number_format($followUpStats['done']) }}</p>
+            <p class="text-xs font-medium text-gray-500">Beklemeye Alındı</p>
+            <p class="mt-0.5 text-xl font-bold text-slate-700">{{ number_format($postponed) }}</p>
         </div>
     </div>
 </div>
@@ -114,7 +85,7 @@
             <i data-lucide="pie-chart" class="h-5 w-5 text-gray-400"></i>
             Lead Durumları
         </h3>
-        <div class="mx-auto h-[200px] w-full max-h-[200px] sm:h-[220px] sm:max-h-[220px] lg:h-[250px] lg:max-h-[250px] lg:w-3/4">
+        <div class="mx-auto h-[260px] w-full max-h-[260px] sm:h-[290px] sm:max-h-[290px] lg:h-[320px] lg:max-h-[320px] lg:w-full">
             <canvas id="leadPieChart" class="h-full w-full" height="250"></canvas>
         </div>
     </div>
@@ -125,8 +96,50 @@
             <i data-lucide="bar-chart-3" class="h-5 w-5 text-gray-400"></i>
             Dönüşüm Tüneli
         </h3>
-        <div class="mx-auto h-[200px] w-full max-h-[200px] sm:h-[220px] sm:max-h-[220px] lg:h-[250px] lg:max-h-[250px] lg:w-3/4">
-            <canvas id="funnelChart" class="h-full w-full" height="250"></canvas>
+        @php
+            $totalLeadsForPct = max((int) $totalLeads, 1);
+            $calledPct = (int) round(($called / $totalLeadsForPct) * 100);
+            $demoPreparingPct = (int) round(($demoPreparing / $totalLeadsForPct) * 100);
+            $demoReadyPct = (int) round(($demoReady / $totalLeadsForPct) * 100);
+            $wonPct = (int) round(($won / $totalLeadsForPct) * 100);
+        @endphp
+        <div class="space-y-4">
+            <div>
+                <div class="mb-1 flex justify-between text-sm">
+                    <span class="text-gray-600">Arandı</span>
+                    <span class="font-semibold text-amber-600">%{{ $calledPct }} | {{ number_format($called) }}</span>
+                </div>
+                <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+                    <div class="report-funnel-bar h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-[width] duration-1000 ease-out" data-target-width="{{ $calledPct }}" style="width: 0%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="mb-1 flex justify-between text-sm">
+                    <span class="text-gray-600">Demo Hazırlanıyor</span>
+                    <span class="font-semibold text-cyan-600">%{{ $demoPreparingPct }} | {{ number_format($demoPreparing) }}</span>
+                </div>
+                <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+                    <div class="report-funnel-bar h-full rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 transition-[width] duration-1000 ease-out" data-target-width="{{ $demoPreparingPct }}" style="width: 0%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="mb-1 flex justify-between text-sm">
+                    <span class="text-gray-600">Demo Hazırlandı</span>
+                    <span class="font-semibold text-violet-600">%{{ $demoReadyPct }} | {{ number_format($demoReady) }}</span>
+                </div>
+                <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+                    <div class="report-funnel-bar h-full rounded-full bg-gradient-to-r from-violet-400 to-violet-500 transition-[width] duration-1000 ease-out" data-target-width="{{ $demoReadyPct }}" style="width: 0%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="mb-1 flex justify-between text-sm">
+                    <span class="text-gray-600">İş Alındı</span>
+                    <span class="font-semibold text-emerald-600">%{{ $wonPct }} | {{ number_format($won) }}</span>
+                </div>
+                <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
+                    <div class="report-funnel-bar h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-[width] duration-1000 ease-out" data-target-width="{{ $wonPct }}" style="width: 0%"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -186,17 +199,41 @@
 
 @section('scripts')
 <script>
+function animateReportFunnelBars() {
+    const bars = document.querySelectorAll('.report-funnel-bar');
+    if (!bars.length) return;
+
+    bars.forEach((bar) => {
+        bar.style.width = '0%';
+    });
+
+    requestAnimationFrame(() => {
+        bars.forEach((bar, index) => {
+            const target = Number(bar.getAttribute('data-target-width') || '0');
+            const clampedTarget = Math.max(0, Math.min(100, target));
+            setTimeout(() => {
+                bar.style.width = `${clampedTarget}%`;
+            }, index * 120);
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    const leadStatusChartConfig = window.LEAD_STATUS_CHART || {
+        labels: ['Arandı', 'Demo Hazırlanıyor', 'Demo Hazırlandı', 'İş alındı', 'İş Alınamadı', 'Beklemeye Alındı'],
+        colors: ['#f59e0b', '#06b6d4', '#8b5cf6', '#10b981', '#ef4444', '#94a3b8'],
+    };
+
     // Lead Status Pie
     const pieCtx = document.getElementById('leadPieChart');
     if (pieCtx) {
         new Chart(pieCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Kazanılan', 'Kaybedilen', 'Ertelenen', 'Diğer'],
+                labels: leadStatusChartConfig.labels,
                 datasets: [{
-                    data: [{{ $won }}, {{ $lost }}, {{ $postponed }}, {{ max($totalLeads - $won - $lost - $postponed, 0) }}],
-                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#6366f1'],
+                    data: [{{ $called }}, {{ $demoPreparing }}, {{ $demoReady }}, {{ $won }}, {{ $lost }}, {{ $postponed }}],
+                    backgroundColor: leadStatusChartConfig.colors,
                     borderWidth: 0,
                     hoverOffset: 8
                 }]
@@ -204,44 +241,21 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '65%',
+                cutout: '62%',
                 plugins: {
-                    legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10, font: { size: 12 } } }
+                    legend: { position: 'right', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 12, font: { size: 13 } } }
                 }
             }
         });
     }
 
-    // Funnel Bar
-    const funnelCtx = document.getElementById('funnelChart');
-    if (funnelCtx) {
-        new Chart(funnelCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Toplam Lead', 'Mail Gönderildi', 'Takip Yapıldı', 'Kazanılan'],
-                datasets: [{
-                    data: [{{ $totalLeads }}, {{ $emailStats['sent'] }}, {{ $followUpStats['done'] }}, {{ $won }}],
-                    backgroundColor: ['#818cf8', '#38bdf8', '#f59e0b', '#10b981'],
-                    borderRadius: 0,
-                    barPercentage: 0.6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: { grid: { display: false }, border: { display: false } },
-                    y: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 12, weight: 500 } } }
-                }
-            }
-        });
-    }
+    animateReportFunnelBars();
 
     lucide.createIcons();
+});
+
+window.addEventListener('pageshow', function() {
+    animateReportFunnelBars();
 });
 </script>
 @endsection

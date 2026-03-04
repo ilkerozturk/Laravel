@@ -39,11 +39,4 @@ return [
         'places_api_key' => env('GOOGLE_PLACES_API_KEY'),
     ],
 
-    'cloud_opus' => [
-        'api_key' => env('CLOUD_OPUS_API_KEY'),
-        'model' => env('CLOUD_OPUS_MODEL', 'claude-opus-4-1-20250805'),
-        'base_url' => env('CLOUD_OPUS_BASE_URL', 'https://api.anthropic.com/v1/messages'),
-        'max_tokens' => (int) env('CLOUD_OPUS_MAX_TOKENS', 2400),
-    ],
-
 ];

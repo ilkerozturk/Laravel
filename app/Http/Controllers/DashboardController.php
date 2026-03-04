@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
-use App\Models\FollowUp;
 use App\Models\Lead;
 
 class DashboardController extends Controller
@@ -14,9 +13,12 @@ class DashboardController extends Controller
             'companyCount' => Company::count(),
             'noWebsiteCount' => Company::whereNull('website')->orWhere('website', '')->count(),
             'leadCount' => Lead::count(),
-            'wonCount' => Lead::where('status', 'won')->count(),
-            'lostCount' => Lead::where('status', 'lost')->count(),
-            'dueFollowUpCount' => FollowUp::where('status', 'open')->where('due_at', '<=', now())->count(),
+            'wonCount' => Lead::where('status', Lead::STATUS_WON)->count(),
+            'demoPreparingCount' => Lead::where('status', Lead::STATUS_DEMO_PREPARING)->count(),
+            'demoReadyCount' => Lead::where('status', Lead::STATUS_DEMO_READY)->count(),
+            'lostCount' => Lead::where('status', Lead::STATUS_LOST)->count(),
+            'calledCount' => Lead::where('status', Lead::STATUS_CALLED)->count(),
+            'postponedCount' => Lead::where('status', Lead::STATUS_POSTPONED)->count(),
         ]);
     }
 }
