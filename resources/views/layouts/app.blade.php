@@ -104,7 +104,7 @@
     @endphp
     <div class="flex h-16 items-center justify-center border-b border-white/10 px-5">
         @if($logoUrl)
-            <img src="{{ $logoUrl }}" alt="Logo" style="height: {{ $logoHeight }}px;" class="max-w-full object-contain">
+            <img src="{{ $logoUrl }}" alt="Logo" height="{{ (int) $logoHeight }}" class="max-w-full object-contain">
         @else
             <span class="text-lg font-bold tracking-tight text-white">BT Places</span>
         @endif
@@ -164,18 +164,20 @@
         <div class="ml-auto flex items-center gap-3">
             <span class="hidden text-sm text-gray-500 sm:inline">{{ now()->format('d M Y, H:i') }}</span>
             @auth
-                <div class="hidden items-center gap-2 border border-gray-200 bg-white px-3 py-1.5 sm:flex">
-                    <div class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
-                    <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
-                    <span class="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-brand-600">{{ auth()->user()->role }}</span>
+                <div class="hidden h-10 items-stretch gap-3 sm:flex">
+                    <div class="inline-flex h-full items-center gap-2 border border-gray-200 bg-white px-3">
+                        <div class="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+                        <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
+                        <span class="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold uppercase text-brand-600">{{ auth()->user()->role }}</span>
+                    </div>
+                    <form method="post" action="{{ route('logout') }}" class="flex h-full items-stretch">
+                        @csrf
+                        <button type="submit" class="inline-flex h-full items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800">
+                            <i data-lucide="log-out" class="h-4 w-4"></i>
+                            Çıkış
+                        </button>
+                    </form>
                 </div>
-                <form method="post" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800">
-                        <i data-lucide="log-out" class="h-4 w-4"></i>
-                        Çıkış
-                    </button>
-                </form>
             @endauth
         </div>
     </header>

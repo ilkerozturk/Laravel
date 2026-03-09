@@ -27,14 +27,26 @@
                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
         </div>
         <div>
-            <label class="mb-1.5 block text-xs font-medium text-gray-500">Anahtar Kelime</label>
-            <input name="keyword" placeholder="örn. hortum, cafe" value="{{ old('keyword') }}"
-                   class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
+            <label class="mb-1.5 block text-xs font-medium text-gray-500">Faaliyet Alanı</label>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <input id="keyword-filter" type="text" placeholder="Listede ara..."
+                       class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
+                <select id="keyword-select" name="keyword"
+                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
+                    <option value="">Faaliyet Alanı</option>
+                    @foreach($activityAreas as $activity)
+                        <option value="{{ $activity }}" {{ old('keyword') === $activity ? 'selected' : '' }}>{{ $activity }}</option>
+                    @endforeach
+                    @if(old('keyword') && !$activityAreas->contains(old('keyword')))
+                        <option value="{{ old('keyword') }}" selected>{{ old('keyword') }}</option>
+                    @endif
+                </select>
+            </div>
         </div>
         <div>
             <label class="mb-1.5 block text-xs font-medium text-gray-500">Sayfa Sayısı</label>
             <select name="max_pages"
-                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
+                    class="w-36 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100">
                 <option value="1" {{ old('max_pages', '1') == '1' ? 'selected' : '' }}>1 sayfa (20 sonuç)</option>
                 <option value="2" {{ old('max_pages') == '2' ? 'selected' : '' }}>2 sayfa (40 sonuç)</option>
                 <option value="3" {{ old('max_pages') == '3' ? 'selected' : '' }}>3 sayfa (60 sonuç)</option>
@@ -416,7 +428,7 @@
 
 @section('scripts')
 <script>
-const companyUpdateUrlTemplate = '{{ route('companies.update', ['company' => '__COMPANY_ID__']) }}';
+const companyUpdateUrlTemplate = "{{ route('companies.update', ['company' => '__COMPANY_ID__']) }}";
 
 function showToast(message, type = 'success') {
     const toast = document.getElementById('companies-toast');
@@ -556,6 +568,22 @@ function closeEditModal() {
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeEditModal(); });
 
 document.addEventListener('DOMContentLoaded', function () {
+    const keywordFilter = document.getElementById('keyword-filter');
+    const keywordSelect = document.getElementById('keyword-select');
+    if (keywordFilter && keywordSelect) {
+        keywordFilter.addEventListener('input', function () {
+            const search = keywordFilter.value.toLocaleLowerCase('tr-TR').trim();
+            Array.from(keywordSelect.options).forEach(function (option, index) {
+                if (index === 0) {
+                    option.hidden = false;
+                    return;
+                }
+                const text = (option.textContent || '').toLocaleLowerCase('tr-TR');
+                option.hidden = search !== '' && !text.includes(search);
+            });
+        });
+    }
+
     const toastCloseBtn = document.getElementById('companies-toast-close');
     if (toastCloseBtn) {
         toastCloseBtn.addEventListener('click', function () {

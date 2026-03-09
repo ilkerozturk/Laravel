@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class CompanyController extends Controller
@@ -19,13 +20,13 @@ class CompanyController extends Controller
         $query = Company::query()->latest();
 
         if ($request->filled('q')) {
-            $qValue = mb_strtolower((string) $request->string('q'));
-            $like = '%' . $qValue . '%';
+            $searchValue = trim((string) $request->string('q'));
+            $like = '%' . $searchValue . '%';
             $query->where(function ($q) use ($like) {
-                $q->whereRaw('LOWER(name) LIKE ?', [$like])
-                    ->orWhereRaw('LOWER(phone) LIKE ?', [$like])
-                    ->orWhereRaw('LOWER(email) LIKE ?', [$like])
-                    ->orWhereRaw('LOWER(activity_area) LIKE ?', [$like]);
+                $q->where('name', 'LIKE', $like)
+                    ->orWhere('phone', 'LIKE', $like)
+                    ->orWhere('email', 'LIKE', $like)
+                    ->orWhere('activity_area', 'LIKE', $like);
             });
         }
         if ($request->filled('activity_area')) {
@@ -56,12 +57,18 @@ class CompanyController extends Controller
             ->distinct()
             ->orderBy('district')
             ->pluck('district');
-        $activityAreas = Company::query()
+        $activityAreasFromCompanies = Company::query()
             ->whereNotNull('activity_area')
             ->where('activity_area', '!=', '')
             ->distinct()
             ->orderBy('activity_area')
             ->pluck('activity_area');
+        $activityAreas = collect(array_values($this->activityAreaMap()))
+            ->merge($activityAreasFromCompanies)
+            ->filter(fn ($value) => is_string($value) && trim($value) !== '')
+            ->unique()
+            ->sort()
+            ->values();
 
         return view('companies.index', compact('companies', 'cities', 'districts', 'activityAreas'));
     }
@@ -129,7 +136,7 @@ class CompanyController extends Controller
             Lead::firstOrCreate([
                 'company_id' => $company->id,
             ], [
-                'status' => Lead::STATUS_DEMO_READY,
+                'status' => Lead::STATUS_POSTPONED,
             ]);
         }
 
@@ -209,9 +216,95 @@ class CompanyController extends Controller
             return back()->with('status', 'Google Places API key eksik. .env dosyasina GOOGLE_PLACES_API_KEY ekleyin.');
         }
 
-        $query = trim(($data['keyword'] ?? '') . ' ' . $data['district'] . ' ' . $data['city']);
         $maxPages = (int) ($data['max_pages'] ?? 1);
 
+        $searchQueries = $this->buildPlaceSearchQueries($data);
+        $stats = [
+            'created_count' => 0,
+            'updated_count' => 0,
+            'skipped_count' => 0,
+            'new_lead_count' => 0,
+            'page_count' => 0,
+            'fetched_result_count' => 0,
+            'api_status' => null,
+            'api_error_message' => null,
+        ];
+
+        foreach ($searchQueries as $searchQuery) {
+            $currentStats = $this->importPlacesForQuery($searchQuery, $apiKey, $data, $maxPages);
+            if (($currentStats['fetched_result_count'] ?? 0) > 0) {
+                $stats = $currentStats;
+                break;
+            }
+
+            if (!empty($currentStats['api_status'])) {
+                $stats['api_status'] = $currentStats['api_status'];
+                $stats['api_error_message'] = $currentStats['api_error_message'] ?? null;
+            }
+        }
+
+        $createdCount = (int) ($stats['created_count'] ?? 0);
+        $updatedCount = (int) ($stats['updated_count'] ?? 0);
+        $skippedCount = (int) ($stats['skipped_count'] ?? 0);
+        $newLeadCount = (int) ($stats['new_lead_count'] ?? 0);
+        $pageCount = (int) ($stats['page_count'] ?? 0);
+        $fetchedResultCount = (int) ($stats['fetched_result_count'] ?? 0);
+
+        if ($fetchedResultCount === 0) {
+            if (!empty($stats['api_status']) && $stats['api_status'] !== 'ZERO_RESULTS') {
+                $apiMessage = 'Google Places hatasi: ' . $stats['api_status'];
+                if (!empty($stats['api_error_message'])) {
+                    $apiMessage .= ' (' . $stats['api_error_message'] . ')';
+                }
+
+                return back()->with('status', $apiMessage);
+            }
+
+            return back()->with('status', 'Google Places sonucunda kayit bulunamadi.');
+        }
+
+        PlaceImportLog::create([
+            'city' => $data['city'],
+            'district' => $data['district'],
+            'keyword' => $data['keyword'] ?? null,
+            'max_pages' => $maxPages,
+            'pages_processed' => $pageCount,
+            'fetched_result_count' => $fetchedResultCount,
+            'created_count' => $createdCount,
+            'updated_count' => $updatedCount,
+            'skipped_count' => $skippedCount,
+            'new_lead_count' => $newLeadCount,
+            'executed_at' => now(),
+        ]);
+
+        return back()->with(
+            'status',
+            "Google Places import tamamlandi. Sayfa: {$pageCount}, cekilen: {$fetchedResultCount}, yeni: {$createdCount}, guncellendi: {$updatedCount}, atlandi: {$skippedCount}, yeni lead: {$newLeadCount}."
+        );
+    }
+
+    private function buildPlaceSearchQueries(array $data): array
+    {
+        $keyword = trim((string) ($data['keyword'] ?? ''));
+        $district = trim((string) ($data['district'] ?? ''));
+        $city = trim((string) ($data['city'] ?? ''));
+
+        $query1 = trim(implode(' ', array_filter([$keyword, $district, $city])));
+        $query2 = trim(implode(' ', array_filter([$keyword, $city, $district])));
+        $query3 = trim(implode(' ', array_filter([$district, $city, $keyword])));
+
+        return array_values(array_filter(array_unique([
+            $query1,
+            $query2,
+            $query3,
+            trim(Str::ascii($query1)),
+            trim(Str::ascii($query2)),
+            trim(Str::ascii($query3)),
+        ])));
+    }
+
+    private function importPlacesForQuery(string $query, string $apiKey, array $data, int $maxPages): array
+    {
         $createdCount = 0;
         $updatedCount = 0;
         $skippedCount = 0;
@@ -228,7 +321,6 @@ class CompanyController extends Controller
             ];
 
             if ($nextPageToken) {
-                // Google may return INVALID_REQUEST for a short period before token becomes active.
                 sleep(2);
                 $params['pagetoken'] = $nextPageToken;
             } else {
@@ -238,6 +330,20 @@ class CompanyController extends Controller
             $searchResponse = Http::timeout(20)
                 ->get('https://maps.googleapis.com/maps/api/place/textsearch/json', $params)
                 ->json();
+
+            $apiStatus = (string) ($searchResponse['status'] ?? '');
+            if ($apiStatus !== '' && !in_array($apiStatus, ['OK', 'ZERO_RESULTS'], true)) {
+                return [
+                    'created_count' => 0,
+                    'updated_count' => 0,
+                    'skipped_count' => 0,
+                    'new_lead_count' => 0,
+                    'page_count' => $pageCount,
+                    'fetched_result_count' => 0,
+                    'api_status' => $apiStatus,
+                    'api_error_message' => (string) ($searchResponse['error_message'] ?? ''),
+                ];
+            }
 
             $results = $searchResponse['results'] ?? [];
             if (!is_array($results)) {
@@ -293,7 +399,7 @@ class CompanyController extends Controller
                 if (empty($company->website)) {
                     $lead = Lead::firstOrCreate(
                         ['company_id' => $company->id],
-                        ['status' => Lead::STATUS_DEMO_READY]
+                        ['status' => Lead::STATUS_POSTPONED]
                     );
                     if ($lead->wasRecentlyCreated) {
                         $newLeadCount++;
@@ -305,28 +411,16 @@ class CompanyController extends Controller
             $nextPageToken = $searchResponse['next_page_token'] ?? null;
         } while ($nextPageToken && $pageCount < $maxPages);
 
-        if ($fetchedResultCount === 0) {
-            return back()->with('status', 'Google Places sonucunda kayit bulunamadi.');
-        }
-
-        PlaceImportLog::create([
-            'city' => $data['city'],
-            'district' => $data['district'],
-            'keyword' => $data['keyword'] ?? null,
-            'max_pages' => $maxPages,
-            'pages_processed' => $pageCount,
-            'fetched_result_count' => $fetchedResultCount,
+        return [
             'created_count' => $createdCount,
             'updated_count' => $updatedCount,
             'skipped_count' => $skippedCount,
             'new_lead_count' => $newLeadCount,
-            'executed_at' => now(),
-        ]);
-
-        return back()->with(
-            'status',
-            "Google Places import tamamlandi. Sayfa: {$pageCount}, cekilen: {$fetchedResultCount}, yeni: {$createdCount}, guncellendi: {$updatedCount}, atlandi: {$skippedCount}, yeni lead: {$newLeadCount}."
-        );
+            'page_count' => $pageCount,
+            'fetched_result_count' => $fetchedResultCount,
+            'api_status' => null,
+            'api_error_message' => null,
+        ];
     }
 
     public function destroy(Company $company): RedirectResponse
@@ -379,32 +473,55 @@ class CompanyController extends Controller
     private function detectActivityArea(array $types, string $name): ?string
     {
         $haystack = mb_strtolower(implode(' ', $types) . ' ' . $name);
-        $map = [
-            'restaurant' => 'Restoran',
-            'cafe' => 'Kafe',
-            'bakery' => 'Firincilik',
-            'beauty' => 'Guzellik Hizmetleri',
-            'hair' => 'Kuafor Hizmetleri',
-            'dentist' => 'Dis Klinigi',
-            'doctor' => 'Saglik Hizmetleri',
-            'lawyer' => 'Hukuk Hizmetleri',
-            'real_estate' => 'Gayrimenkul',
-            'car_repair' => 'Oto Servis',
-            'plumber' => 'Tesisat Hizmetleri',
-            'electrician' => 'Elektrik Hizmetleri',
-            'store' => 'Perakende',
-            'accounting' => 'Muhasebe Hizmetleri',
-            'school' => 'Egitim Hizmetleri',
-            'gym' => 'Spor ve Fitness',
-            'manufactur' => 'Imalat Sanayi',
-        ];
 
-        foreach ($map as $keyword => $label) {
+        foreach ($this->activityAreaMap() as $keyword => $label) {
             if (str_contains($haystack, $keyword)) {
                 return $label;
             }
         }
 
         return null;
+    }
+
+    private function activityAreaMap(): array
+    {
+        return [
+            'restaurant' => 'Restoran',
+            'cafe' => 'Kafe',
+            'bakery' => 'Firincilik',
+            'meal_takeaway' => 'Paket Servis',
+            'meal_delivery' => 'Yemek Teslimat',
+            'beauty' => 'Guzellik Hizmetleri',
+            'hair' => 'Kuafor Hizmetleri',
+            'dentist' => 'Dis Klinigi',
+            'doctor' => 'Saglik Hizmetleri',
+            'hospital' => 'Hastane',
+            'pharmacy' => 'Eczane',
+            'lawyer' => 'Hukuk Hizmetleri',
+            'real_estate' => 'Gayrimenkul',
+            'car_repair' => 'Oto Servis',
+            'car_dealer' => 'Oto Bayi',
+            'car_rental' => 'Arac Kiralama',
+            'gas_station' => 'Akaryakit Istasyonu',
+            'plumber' => 'Tesisat Hizmetleri',
+            'electrician' => 'Elektrik Hizmetleri',
+            'store' => 'Perakende',
+            'shopping_mall' => 'Alisveris Merkezi',
+            'supermarket' => 'Supermarket',
+            'hardware_store' => 'Hirdavat',
+            'home_goods_store' => 'Ev Gerecleri',
+            'furniture_store' => 'Mobilya',
+            'pet_store' => 'Pet Shop',
+            'accounting' => 'Muhasebe Hizmetleri',
+            'bank' => 'Bankacilik',
+            'insurance_agency' => 'Sigortacilik',
+            'school' => 'Egitim Hizmetleri',
+            'gym' => 'Spor ve Fitness',
+            'lodging' => 'Konaklama',
+            'hotel' => 'Otel',
+            'tourist_attraction' => 'Turizm',
+            'travel_agency' => 'Seyahat Acentasi',
+            'manufactur' => 'Imalat Sanayi',
+        ];
     }
 }
