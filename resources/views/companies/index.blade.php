@@ -287,6 +287,7 @@
                                 'google_category' => $company->google_category,
                                 'activity_area' => $company->activity_area,
                                 'lead_status' => $company->lead?->status,
+                                'lead_notes' => $company->lead?->notes,
                             ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
                         @endphp
                         <div class="flex flex-nowrap items-center justify-center gap-1.5 whitespace-nowrap">
@@ -404,6 +405,10 @@
                             <option value="{{ $statusValue }}">{{ $statusLabel }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="mb-1.5 block text-xs font-medium text-gray-500">Lead Notu</label>
+                    <textarea id="edit-lead_notes" name="lead_notes" rows="3" class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100"></textarea>
                 </div>
             </div>
             <div class="mt-6 flex items-center justify-end gap-3">
@@ -534,7 +539,8 @@ function updateCompanyRow(company) {
             website: company.website || '',
             google_category: company.google_category || '',
             activity_area: company.activity_area || '',
-            lead_status: company.lead_status || ''
+            lead_status: company.lead_status || '',
+            lead_notes: company.lead_notes || ''
         }));
     }
 
@@ -557,6 +563,7 @@ function openEditModal(companyId, data) {
     document.getElementById('edit-google_category').value = data.google_category || '';
     document.getElementById('edit-activity_area').value = data.activity_area || '';
     document.getElementById('edit-lead_status').value = data.lead_status || '';
+    document.getElementById('edit-lead_notes').value = data.lead_notes || '';
     document.getElementById('editModal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
     setTimeout(() => lucide.createIcons(), 50);

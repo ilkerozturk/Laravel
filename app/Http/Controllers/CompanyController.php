@@ -159,21 +159,34 @@ class CompanyController extends Controller
             'google_category' => ['nullable', 'string', 'max:190'],
             'activity_area' => ['nullable', 'string', 'max:255'],
             'lead_status' => ['nullable', Rule::in(array_keys(Lead::statusOptions()))],
+            'lead_notes' => ['nullable', 'string'],
         ]);
 
         $companyData = $data;
         unset($companyData['lead_status']);
+        unset($companyData['lead_notes']);
 
         $company->update($companyData);
 
-        if (!empty($data['lead_status'])) {
-            Lead::query()->updateOrCreate(
-                ['company_id' => $company->id],
-                ['status' => $data['lead_status']]
-            );
-        }
-
         $lead = Lead::query()->where('company_id', $company->id)->first();
+        $leadStatus = !empty($data['lead_status']) ? (string) $data['lead_status'] : null;
+        $leadNotes = isset($data['lead_notes']) ? trim((string) $data['lead_notes']) : '';
+        $normalizedLeadNotes = $leadNotes !== '' ? $leadNotes : null;
+
+        if ($lead) {
+            $leadPayload = ['notes' => $normalizedLeadNotes];
+            if ($leadStatus !== null) {
+                $leadPayload['status'] = $leadStatus;
+            }
+            $lead->update($leadPayload);
+            $lead->refresh();
+        } elseif ($leadStatus !== null || $normalizedLeadNotes !== null) {
+            $lead = Lead::query()->create([
+                'company_id' => $company->id,
+                'status' => $leadStatus ?? Lead::STATUS_POSTPONED,
+                'notes' => $normalizedLeadNotes,
+            ]);
+        }
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
@@ -195,6 +208,7 @@ class CompanyController extends Controller
                     'lead_status' => $lead?->status,
                     'lead_status_label' => $lead ? Lead::statusLabel($lead->status) : null,
                     'lead_status_class' => $lead ? Lead::statusBadgeClass($lead->status) : null,
+                    'lead_notes' => $lead?->notes,
                 ],
             ]);
         }
